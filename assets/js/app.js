@@ -14,8 +14,8 @@
 //
 //     import "some-package"
 //
-// If you have dependencies that try to import CSS, esbuild will generate a separate `app.css` file.
-// To load it, simply add a second `<link>` to your `root.html.heex` file.
+// CSS is bundled separately from css/app.css by the excloud_css esbuild profile.
+// Import Bootstrap JavaScript plugins here only when a component needs them.
 
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html"
@@ -24,6 +24,9 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/excloud"
 import topbar from "../vendor/topbar"
+import {initTheme} from "./theme.mjs"
+
+initTheme(window, document)
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {

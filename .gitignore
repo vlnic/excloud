@@ -27,11 +27,17 @@ excloud-*.tar
 
 # Ignore assets that are produced by build tools.
 /priv/static/assets/
+/priv/static/images/
 
 # Ignore digested assets cache.
 /priv/static/cache_manifest.json
+
+# Ignore compressed and fingerprinted copies produced by phx.digest.
+/priv/static/**/*.gz
+/priv/static/**/*-????????????????????????????????.*
 
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
 /assets/node_modules/
 
+AGENTS.md

@@ -1,0 +1,32 @@
+<Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
+  <div class="app-auth-container mx-auto">
+    <div class="text-center">
+      <.header>
+        Register for an account
+        <:subtitle>
+          Already registered?
+          <.link navigate={~p"<%= schema.route_prefix %>/log-in"} class="fw-semibold">
+            Log in
+          </.link>
+          to your account now.
+        </:subtitle>
+      </.header>
+    </div>
+
+    <.form for={@form} id="registration_form" action={~p"<%= schema.route_prefix %>/register"}>
+      <.input
+        field={@form[:email]}
+        type="email"
+        label="Email"
+        autocomplete="username"
+        spellcheck="false"
+        required
+        phx-mounted={JS.focus()}
+      />
+
+      <.button phx-disable-with="Creating account..." class="btn-solid theme-primary w-100">
+        Create an account
+      </.button>
+    </.form>
+  </div>
+</Layouts.app>

@@ -1,0 +1,11 @@
+{
+  "name": "excloud-assets",
+  "private": true,
+  "scripts": {
+    "build:images": "node build/images.mjs",
+    "test": "node --test js/theme.test.mjs build/images.test.mjs"
+  },
+  "dependencies": {
+    "bootstrap": "6.0.0-alpha.1"
+  }
+}

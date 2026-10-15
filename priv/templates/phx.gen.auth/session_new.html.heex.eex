@@ -1,0 +1,73 @@
+<Layouts.app flash={@flash} <%= scope_config.scope.assign_key %>={@<%= scope_config.scope.assign_key %>}>
+  <div class="app-auth-container mx-auto">
+    <div class="text-center">
+      <.header>
+        <p>Log in</p>
+        <:subtitle>
+          <%%= if @<%= scope_config.scope.assign_key %> do %>
+            You need to reauthenticate to perform sensitive actions on your account.
+          <%% else %>
+            Don't have an account? <.link
+              navigate={~p"<%= schema.route_prefix %>/register"}
+              class="fw-semibold"
+              phx-no-format
+            >Sign up</.link> for an account now.
+          <%% end %>
+        </:subtitle>
+      </.header>
+    </div>
+
+    <div :if={local_mail_adapter?()} class="alert theme-info">
+      <.icon name="hero-information-circle" class="flex-shrink-0" />
+      <div>
+        <p>You are running the local mail adapter.</p>
+        <p>
+          To see sent emails, visit <.link href="/dev/mailbox" class="text-decoration-underline">the mailbox page</.link>.
+        </p>
+      </div>
+    </div>
+
+    <.form for={@form} as={:<%= schema.singular %>} id="login_form_magic" action={~p"<%= schema.route_prefix %>/log-in"}>
+      <.input
+        readonly={!!@<%= scope_config.scope.assign_key %>}
+        field={@form[:email]}
+        type="email"
+        label="Email"
+        autocomplete="username"
+        spellcheck="false"
+        required
+        phx-mounted={JS.focus()}
+      />
+      <.button class="btn-solid theme-primary w-100">
+        Log in with email <span aria-hidden="true">→</span>
+      </.button>
+    </.form>
+
+    <div class="app-divider my-4">or</div>
+
+    <.form for={@form} as={:<%= schema.singular %>} id="login_form_password" action={~p"<%= schema.route_prefix %>/log-in"}>
+      <.input
+        readonly={!!@<%= scope_config.scope.assign_key %>}
+        field={@form[:email]}
+        type="email"
+        label="Email"
+        autocomplete="username"
+        spellcheck="false"
+        required
+      />
+      <.input
+        field={@form[:password]}
+        type="password"
+        label="Password"
+        autocomplete="current-password"
+        spellcheck="false"
+      />
+      <.button class="btn-solid theme-primary w-100" name={@form[:remember_me].name} value="true">
+        Log in and stay logged in <span aria-hidden="true">→</span>
+      </.button>
+      <.button class="btn-subtle theme-primary w-100 mt-2">
+        Log in only this time
+      </.button>
+    </.form>
+  </div>
+</Layouts.app>

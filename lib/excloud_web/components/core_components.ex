@@ -8,23 +8,10 @@ defmodule ExcloudWeb.CoreComponents do
   with doc strings and declarative assigns. You may customize and style
   them in any way you want, based on your application growth and needs.
 
-  The foundation for styling is Tailwind CSS, a utility-first CSS framework,
-  augmented with daisyUI, a Tailwind CSS plugin that provides UI components
-  and themes. Here are useful references:
+  Styled with Bootstrap 6. Keep form, navigation, stream and flash behavior
+  in these components so templates share a consistent public API.
 
-    * [daisyUI](https://daisyui.com/docs/intro/) - a good place to get
-      started and see the available components.
-
-    * [Tailwind CSS](https://tailwindcss.com) - the foundational framework
-      we build on. You will use it for layout, sizing, flexbox, grid, and
-      spacing.
-
-    * [Heroicons](https://heroicons.com) - see `icon/1` for usage.
-
-    * [Phoenix.Component](https://phoenix-live-view.hexdocs.pm/Phoenix.Component.html) -
-      the component system used by Phoenix. Some components, such as `<.link>`
-      and `<.form>`, are defined there.
-
+  Icons temporarily render the local Bootstrap logo through `icon/1`.
   """
   use Phoenix.Component
   use Gettext, backend: ExcloudWeb.Gettext
@@ -61,27 +48,24 @@ defmodule ExcloudWeb.CoreComponents do
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class={["alert app-flash", if(@kind == :info, do: "theme-info", else: "theme-danger")]}
       {@rest}
     >
-      <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
-        @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
-      ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
-        <div>
-          <p :if={@title} class="font-semibold">{@title}</p>
-          <p>{msg}</p>
-        </div>
-        <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
-        </button>
+      <.icon name={if(@kind == :info, do: "hero-information-circle", else: "hero-exclamation-circle")} />
+      <div class="flex-grow-1">
+        <p :if={@title} class="fw-semibold mb-1">{@title}</p>
+        <p class="mb-0">{msg}</p>
       </div>
+      <button
+        id={"#{@id}-dismiss"}
+        type="button"
+        class="btn-text btn-icon"
+        aria-label={gettext("close")}
+        phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      >
+        <.icon name="hero-x-mark" />
+      </button>
     </div>
     """
   end
@@ -95,17 +79,19 @@ defmodule ExcloudWeb.CoreComponents do
       <.button phx-click="go" variant="primary">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
+  attr :rest, :global,
+    include: ~w(href navigate patch method download name value disabled type form)
+
   attr :class, :any
   attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
+    variants = %{"primary" => "btn-solid theme-primary", nil => "btn-subtle theme-primary"}
 
     assigns =
       assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
+        ["app-button", Map.fetch!(variants, assigns[:variant])]
       end)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
@@ -199,21 +185,33 @@ defmodule ExcloudWeb.CoreComponents do
     |> input()
   end
 
-  def input(%{type: "hidden"} = assigns) do
-    ~H"""
-    <input type="hidden" id={@id} name={@name} value={@value} {@rest} />
-    """
-  end
+  def input(assigns) do
+    error_id = if assigns.id && assigns.errors != [], do: "#{assigns.id}-errors"
 
-  def input(%{type: "checkbox"} = assigns) do
+    described_by =
+      [assigns.rest[:"aria-describedby"], error_id]
+      |> Enum.reject(&is_nil/1)
+      |> Enum.join(" ")
+
     assigns =
-      assign_new(assigns, :checked, fn ->
+      assigns
+      |> assign(:error_id, error_id)
+      |> assign(:described_by, if(described_by == "", do: nil, else: described_by))
+      |> assign(
+        :invalid,
+        if(assigns.errors != [], do: "true", else: assigns.rest[:"aria-invalid"])
+      )
+      |> assign(:rest, Map.drop(assigns.rest, [:"aria-describedby", :"aria-invalid"]))
+      |> assign_new(:value, fn -> nil end)
+      |> assign_new(:checked, fn ->
         Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
       end)
 
     ~H"""
-    <div class="fieldset mb-2">
-      <label for={@id}>
+    <%= case @type do %>
+      <% "hidden" -> %>
+        <input type="hidden" id={@id} name={@name} value={@value} {@rest} />
+      <% "checkbox" -> %>
         <input
           type="hidden"
           name={@name}
@@ -221,94 +219,75 @@ defmodule ExcloudWeb.CoreComponents do
           disabled={@rest[:disabled]}
           form={@rest[:form]}
         />
-        <span class="label">
+        <div class="form-field mb-4">
           <input
             type="checkbox"
             id={@id}
             name={@name}
             value="true"
             checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
+            class={[@class || "check", @errors != [] && (@error_class || "is-invalid")]}
+            aria-invalid={@invalid}
+            aria-describedby={@described_by}
             {@rest}
-          />{@label}
-        </span>
-      </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
+          />
+          <div class="form-field-content">
+            <label :if={@label} for={@id}>{@label}</label>
+            <.field_errors id={@error_id} errors={@errors} />
+          </div>
+        </div>
+      <% _ -> %>
+        <div class="form-field mb-4">
+          <label :if={@label} for={@id} class="form-label">{@label}</label>
+          <%= case @type do %>
+            <% "select" -> %>
+              <select
+                id={@id}
+                name={@name}
+                class={[@class || "form-control", @errors != [] && (@error_class || "is-invalid")]}
+                multiple={@multiple}
+                aria-invalid={@invalid}
+                aria-describedby={@described_by}
+                {@rest}
+              >
+                <option :if={@prompt} value="">{@prompt}</option>
+                {Phoenix.HTML.Form.options_for_select(@options, @value)}
+              </select>
+            <% "textarea" -> %>
+              <textarea
+                id={@id}
+                name={@name}
+                class={[@class || "form-control", @errors != [] && (@error_class || "is-invalid")]}
+                aria-invalid={@invalid}
+                aria-describedby={@described_by}
+                {@rest}
+              >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+            <% _ -> %>
+              <input
+                type={@type}
+                name={@name}
+                id={@id}
+                value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+                class={[@class || "form-control", @errors != [] && (@error_class || "is-invalid")]}
+                aria-invalid={@invalid}
+                aria-describedby={@described_by}
+                {@rest}
+              />
+          <% end %>
+          <.field_errors id={@error_id} errors={@errors} />
+        </div>
+    <% end %>
     """
   end
 
-  def input(%{type: "select"} = assigns) do
-    ~H"""
-    <div class="fieldset mb-2">
-      <label for={@id}>
-        <span :if={@label} class="label mb-1">{@label}</span>
-        <select
-          id={@id}
-          name={@name}
-          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
-          multiple={@multiple}
-          {@rest}
-        >
-          <option :if={@prompt} value="">{@prompt}</option>
-          {Phoenix.HTML.Form.options_for_select(@options, @value)}
-        </select>
-      </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
-    """
-  end
+  attr :id, :string, default: nil
+  attr :errors, :list, required: true
 
-  def input(%{type: "textarea"} = assigns) do
+  defp field_errors(assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label for={@id}>
-        <span :if={@label} class="label mb-1">{@label}</span>
-        <textarea
-          id={@id}
-          name={@name}
-          class={[
-            @class || "w-full textarea",
-            @errors != [] && (@error_class || "textarea-error")
-          ]}
-          {@rest}
-        >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
-      </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+    <div :if={@errors != []} id={@id} class="invalid-feedback d-block">
+      <p :for={msg <- @errors} class="mb-0">{msg}</p>
     </div>
-    """
-  end
-
-  # All other inputs text, datetime-local, url, password, etc. are handled here...
-  def input(assigns) do
-    ~H"""
-    <div class="fieldset mb-2">
-      <label for={@id}>
-        <span :if={@label} class="label mb-1">{@label}</span>
-        <input
-          type={@type}
-          name={@name}
-          id={@id}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={[
-            @class || "w-full input",
-            @errors != [] && (@error_class || "input-error")
-          ]}
-          {@rest}
-        />
-      </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
-    """
-  end
-
-  # Helper used by inputs to generate form errors
-  defp error(assigns) do
-    ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle" class="size-5" />
-      {render_slot(@inner_block)}
-    </p>
     """
   end
 
@@ -321,16 +300,19 @@ defmodule ExcloudWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
+    <header class={[
+      @actions != [] && "d-flex flex-wrap align-items-center justify-content-between gap-4",
+      "mb-5"
+    ]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8">
+        <h1 class="h3 fw-semibold mb-2">
           {render_slot(@inner_block)}
         </h1>
-        <p :if={@subtitle != []} class="text-sm text-base-content/70">
+        <p :if={@subtitle != []} class="app-muted mb-0">
           {render_slot(@subtitle)}
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      <div class="d-flex flex-wrap gap-2">{render_slot(@actions)}</div>
     </header>
     """
   end
@@ -367,34 +349,36 @@ defmodule ExcloudWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
-      <thead>
-        <tr>
-          <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
-            <span class="sr-only">{gettext("Actions")}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
-          <td
-            :for={col <- @col}
-            phx-click={@row_click && @row_click.(row)}
-            class={@row_click && "hover:cursor-pointer"}
-          >
-            {render_slot(col, @row_item.(row))}
-          </td>
-          <td :if={@action != []} class="w-0 font-semibold">
-            <div class="flex gap-4">
-              <%= for action <- @action do %>
-                {render_slot(action, @row_item.(row))}
-              <% end %>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th :for={col <- @col}>{col[:label]}</th>
+            <th :if={@action != []}>
+              <span class="visually-hidden">{gettext("Actions")}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
+            <td
+              :for={col <- @col}
+              phx-click={@row_click && @row_click.(row)}
+              class={@row_click && "app-clickable"}
+            >
+              {render_slot(col, @row_item.(row))}
+            </td>
+            <td :if={@action != []} class="app-table-actions fw-semibold">
+              <div class="d-flex gap-3">
+                <%= for action <- @action do %>
+                  {render_slot(action, @row_item.(row))}
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     """
   end
 
@@ -414,41 +398,35 @@ defmodule ExcloudWeb.CoreComponents do
 
   def list(assigns) do
     ~H"""
-    <ul class="list">
-      <li :for={item <- @item} class="list-row">
-        <div class="list-col-grow">
-          <div class="font-bold">{item.title}</div>
-          <div>{render_slot(item)}</div>
-        </div>
-      </li>
-    </ul>
+    <dl class="app-detail-list">
+      <div :for={item <- @item} class="row py-3 border-bottom">
+        <dt class="sm:col-4 fw-semibold">{item.title}</dt>
+        <dd class="sm:col-8 mb-0">{render_slot(item)}</dd>
+      </div>
+    </dl>
     """
   end
 
   @doc """
-  Renders a [Heroicon](https://heroicons.com).
+  Renders the local Bootstrap logo as a temporary icon.
 
-  Heroicons come in three styles – outline, solid, and mini.
-  By default, the outline style is used, but solid and mini may
-  be applied by using the `-solid` and `-mini` suffix.
-
-  You can customize the size and colors of the icons by setting
-  width, height, and background color classes.
-
-  Icons are extracted from the `deps/heroicons` directory and bundled within
-  your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
-
-  ## Examples
-
-      <.icon name="hero-x-mark" />
-      <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+  The name parameter remains compatible with generated Phoenix templates.
+  Functional buttons must provide a visible label or aria-label.
   """
   attr :name, :string, required: true
-  attr :class, :any, default: "size-4"
+  attr :class, :any, default: nil
 
-  def icon(%{name: "hero-" <> _} = assigns) do
+  def icon(assigns) do
     ~H"""
-    <span class={[@name, @class]} />
+    <svg
+      class={["app-icon", @class]}
+      viewBox="0 0 16 16"
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <use href="/images/bootstrap.svg#bootstrap-mark" />
+    </svg>
     """
   end
 
@@ -458,10 +436,7 @@ defmodule ExcloudWeb.CoreComponents do
     JS.show(js,
       to: selector,
       time: 300,
-      transition:
-        {"transition-all ease-out duration-300",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
-         "opacity-100 translate-y-0 sm:scale-100"}
+      transition: {"app-enter", "app-transition-hidden", "app-transition-visible"}
     )
   end
 
@@ -469,9 +444,7 @@ defmodule ExcloudWeb.CoreComponents do
     JS.hide(js,
       to: selector,
       time: 200,
-      transition:
-        {"transition-all ease-in duration-200", "opacity-100 translate-y-0 sm:scale-100",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
+      transition: {"app-leave", "app-transition-visible", "app-transition-hidden"}
     )
   end
 
