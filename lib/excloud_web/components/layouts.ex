@@ -2,6 +2,7 @@ defmodule ExcloudWeb.Layouts do
   @moduledoc """
   Application layouts, connection notices and the Bootstrap color mode switcher.
   """
+
   use ExcloudWeb, :html
 
   embed_templates "layouts/*"

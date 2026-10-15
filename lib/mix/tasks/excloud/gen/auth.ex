@@ -1,5 +1,4 @@
 defmodule Mix.Tasks.Excloud.Gen.Auth do
-  @shortdoc "Generates Phoenix authentication with Bootstrap navigation"
   @moduledoc """
   Runs `mix phx.gen.auth` with the same arguments and converts its injected menu
   to Bootstrap. Phoenix 1.8 hardcodes that menu in its injector, so it cannot be
@@ -7,7 +6,10 @@ defmodule Mix.Tasks.Excloud.Gen.Auth do
 
       mix excloud.gen.auth Accounts User users --live
   """
+
   use Mix.Task
+
+  @shortdoc "Generates Phoenix authentication with Bootstrap navigation"
 
   @impl true
   def run(args) do

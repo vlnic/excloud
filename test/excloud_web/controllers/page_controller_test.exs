@@ -1,4 +1,6 @@
 defmodule ExcloudWeb.PageControllerTest do
+  @moduledoc false
+
   use ExcloudWeb.ConnCase
 
   test "GET /", %{conn: conn} do
@@ -8,12 +10,12 @@ defmodule ExcloudWeb.PageControllerTest do
     assert document |> LazyHTML.query("#resources .app-resource-card") |> Enum.count() == 3
 
     assert document
-           |> LazyHTML.query("#app-brand svg use[href='/images/bootstrap.svg#bootstrap-mark']")
-           |> Enum.any?()
+    |> LazyHTML.query("#app-brand svg use[href='/images/bootstrap.svg#bootstrap-mark']")
+    |> Enum.any?()
 
     assert document
-           |> LazyHTML.query("#theme-toggle #theme-system[data-theme-value='system']")
-           |> Enum.any?()
+    |> LazyHTML.query("#theme-toggle #theme-system[data-theme-value='system']")
+    |> Enum.any?()
 
     assert document |> LazyHTML.query("script:not([src])") |> Enum.empty?()
   end

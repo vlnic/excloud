@@ -1,5 +1,8 @@
 defmodule ExcloudWeb.BootstrapFormsTest do
+  @moduledoc false
+
   use ExcloudWeb.ConnCase, async: true
+
   import Phoenix.LiveViewTest
 
   test "form controls keep their values, labels and navigation behavior", %{conn: conn} do
@@ -12,9 +15,9 @@ defmodule ExcloudWeb.BootstrapFormsTest do
     assert has_element?(view, "#preview_accepted.check")
 
     assert has_element?(
-             view,
-             "#preview-form input[type='hidden'][name='preview[accepted]'][value='false']"
-           )
+      view,
+      "#preview-form input[type='hidden'][name='preview[accepted]'][value='false']"
+    )
 
     assert has_element?(view, "#preview-save.btn-solid.theme-primary[phx-disable-with]")
     assert has_element?(view, "a#preview-home[href='/'][data-phx-link='redirect']")
@@ -39,16 +42,16 @@ defmodule ExcloudWeb.BootstrapFormsTest do
     assert has_element?(view, "#preview_email.form-control.is-invalid[aria-invalid='true']")
 
     assert has_element?(
-             view,
-             "#preview_email[aria-describedby='email-help preview_email-errors']"
-           )
+      view,
+      "#preview_email[aria-describedby='email-help preview_email-errors']"
+    )
 
     assert has_element?(view, "#preview_email-errors.invalid-feedback")
 
     assert has_element?(
-             view,
-             "#preview_accepted.check.is-invalid[aria-describedby='preview_accepted-errors']"
-           )
+      view,
+      "#preview_accepted.check.is-invalid[aria-describedby='preview_accepted-errors']"
+    )
 
     assert has_element?(view, "#preview_accepted-errors.invalid-feedback")
     assert has_element?(view, "#preview_notes", "Keep this text")

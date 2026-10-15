@@ -1,5 +1,8 @@
 defmodule ExcloudWeb.BootstrapLiveTest do
+  @moduledoc false
+
   use ExcloudWeb.ConnCase, async: true
+
   import Phoenix.LiveViewTest
 
   test "successful submits show a flash that can be dismissed through LiveView", %{conn: conn} do
@@ -21,9 +24,9 @@ defmodule ExcloudWeb.BootstrapLiveTest do
     {:ok, view, _html} = live_isolated(conn, ExcloudWeb.BootstrapPreviewLive)
 
     assert has_element?(
-             view,
-             ".table-responsive table.table-striped #preview-records[phx-update='stream']"
-           )
+      view,
+      ".table-responsive table.table-striped #preview-records[phx-update='stream']"
+    )
 
     assert has_element?(view, "#records-1")
     view |> element("#preview-add") |> render_click()

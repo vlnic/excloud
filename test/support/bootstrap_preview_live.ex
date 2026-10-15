@@ -1,5 +1,6 @@
 defmodule ExcloudWeb.BootstrapPreviewLive do
   @moduledoc false
+
   use ExcloudWeb, :live_view
 
   @types %{email: :string, accepted: :boolean, role: :string, notes: :string}
@@ -73,7 +74,9 @@ defmodule ExcloudWeb.BootstrapPreviewLive do
   end
 
   defp changeset(params) do
-    {%{email: nil, accepted: false, role: "reader", notes: ""}, @types}
+    data = {%{email: nil, accepted: false, role: "reader", notes: ""}, @types}
+
+    data
     |> Ecto.Changeset.cast(params, Map.keys(@types))
     |> Ecto.Changeset.validate_required([:email])
     |> Ecto.Changeset.validate_format(:email, ~r/@/)

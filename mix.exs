@@ -1,4 +1,6 @@
 defmodule Excloud.MixProject do
+  @moduledoc false
+
   use Mix.Project
 
   def project do

@@ -1,5 +1,8 @@
 defmodule ExcloudWeb.GeneratorFormTest do
+  @moduledoc false
+
   use ExUnit.Case, async: false
+
   import Phoenix.LiveViewTest
 
   test "the HTML generator produces an embedded form that renders changeset values" do
@@ -21,10 +24,9 @@ defmodule ExcloudWeb.GeneratorFormTest do
     ]
 
     for {template, output} <- [
-          {"html.ex.eex", "generated_resource_html.ex"},
-          {"resource_form.html.heex.eex",
-           "generated_resource_html/generated_resource_form.html.heex"}
-        ] do
+      {"html.ex.eex", "generated_resource_html.ex"},
+      {"resource_form.html.heex.eex", "generated_resource_html/generated_resource_form.html.heex"}
+    ] do
       contents = EEx.eval_file("priv/templates/phx.gen.html/#{template}", bindings)
       File.write!(Path.join(directory, output), contents)
     end
@@ -41,11 +43,11 @@ defmodule ExcloudWeb.GeneratorFormTest do
     assert document |> LazyHTML.query("#generated_resource-form[action='/']") |> Enum.any?()
 
     assert document
-           |> LazyHTML.query("#generated_resource-form input.form-control[value='Example']")
-           |> Enum.any?()
+    |> LazyHTML.query("#generated_resource-form input.form-control[value='Example']")
+    |> Enum.any?()
 
     assert document
-           |> LazyHTML.query("#generated_resource-form button.btn-solid.theme-primary")
-           |> Enum.any?()
+    |> LazyHTML.query("#generated_resource-form button.btn-solid.theme-primary")
+    |> Enum.any?()
   end
 end

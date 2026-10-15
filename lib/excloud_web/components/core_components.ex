@@ -13,8 +13,9 @@ defmodule ExcloudWeb.CoreComponents do
 
   Icons temporarily render the local Bootstrap logo through `icon/1`.
   """
-  use Phoenix.Component
+
   use Gettext, backend: ExcloudWeb.Gettext
+  use Phoenix.Component
 
   alias Phoenix.LiveView.JS
 
@@ -188,8 +189,10 @@ defmodule ExcloudWeb.CoreComponents do
   def input(assigns) do
     error_id = if assigns.id && assigns.errors != [], do: "#{assigns.id}-errors"
 
+    description_ids = [assigns.rest[:"aria-describedby"], error_id]
+
     described_by =
-      [assigns.rest[:"aria-describedby"], error_id]
+      description_ids
       |> Enum.reject(&is_nil/1)
       |> Enum.join(" ")
 
