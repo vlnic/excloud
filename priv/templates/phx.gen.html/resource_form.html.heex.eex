@@ -1,0 +1,7 @@
+<.form for={@form} id="<%= schema.singular %>-form" action={@action}>
+<%= Mix.Tasks.Phx.Gen.Html.indent_inputs(Enum.map(inputs, &String.replace(&1, "f[", "@form[")), 2) %>
+  <footer class="d-flex flex-wrap gap-2 mt-4">
+    <.button variant="primary">Save <%= schema.human_singular %></.button>
+    <.button :if={@return_to} href={@return_to}>Cancel</.button>
+  </footer>
+</.form>

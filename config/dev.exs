@@ -26,7 +26,15 @@ config :excloud, ExcloudWeb.Endpoint,
   secret_key_base: "rwKnYCxbs0vHUcZGMDaH35zJQvaPjF62WLbwl0FtU/vSMMXOQiy06V8DnzUZk324",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:excloud, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:excloud, ~w(--watch)]}
+    esbuild_css: {Esbuild, :install_and_run, [:excloud_css, ~w(--sourcemap=inline --watch)]},
+    node: ["build/images.mjs", "--watch", cd: Path.expand("../assets", __DIR__)]
+  ],
+  live_reload: [
+    patterns: [
+      ~r"priv/static/.*\.(js|css|svg|png|jpe?g|gif|webp|avif|ico)$",
+      ~r"priv/gettext/.*\.po$",
+      ~r"lib/excloud_web/(controllers|live|components)/.*\.(ex|heex)$"
+    ]
   ]
 
 # ## SSL Support

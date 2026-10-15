@@ -1,4 +1,6 @@
 defmodule Excloud.MixProject do
+  @moduledoc false
+
   use Mix.Project
 
   def project do
@@ -50,21 +52,6 @@ defmodule Excloud.MixProject do
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.5", runtime: Mix.env() == :dev},
-      {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.2.0",
-       sparse: "optimized",
-       app: false,
-       compile: false,
-       depth: 1},
-      {:daisyui,
-       github: "saadeghi/daisyui",
-       tag: "v5.5.20",
-       sparse: "packages/bundle",
-       app: false,
-       compile: false,
-       depth: 1},
       {:swoosh, "~> 1.16"},
       {:req, "~> 0.5"},
       {:telemetry_metrics, "~> 1.0"},
@@ -88,14 +75,27 @@ defmodule Excloud.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["compile", "tailwind excloud", "esbuild excloud"],
+      "assets.setup": ["cmd --cd assets npm ci", "esbuild.install --if-missing"],
+      "assets.build": [
+        "compile",
+        "cmd --cd assets npm run build:images",
+        "esbuild excloud",
+        "esbuild excloud_css"
+      ],
       "assets.deploy": [
-        "tailwind excloud --minify",
+        "compile",
+        "cmd --cd assets npm run build:images",
         "esbuild excloud --minify",
+        "esbuild excloud_css --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "test",
+        "cmd --cd assets npm test"
+      ]
     ]
   end
 end
